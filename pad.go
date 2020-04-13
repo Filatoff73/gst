@@ -92,3 +92,20 @@ func (p *Pad) IsLinked() bool {
 	// todo
 	return false
 }
+
+func (e *Pad) SetObject(name string, value interface{}) {
+
+	cname := (*C.gchar)(unsafe.Pointer(C.CString(name)))
+	defer C.g_free(C.gpointer(unsafe.Pointer(cname)))
+	switch value.(type) {
+	case string:
+		str := (*C.gchar)(unsafe.Pointer(C.CString(value.(string))))
+		defer C.g_free(C.gpointer(unsafe.Pointer(str)))
+		C.X_gst_g_object_set_string_pad(e.pad, cname, str)
+	case int:
+		C.X_gst_g_object_set_int_pad(e.pad, cname, C.gint(value.(int)))
+	case uint32:
+		C.X_gst_g_object_set_uint_pad(e.pad, cname, C.guint(value.(uint32)))
+
+	}
+}

@@ -28,6 +28,11 @@ extern void X_gst_g_object_set_caps(GstElement *e, const gchar* p_name, const Gs
 extern void X_gst_g_object_set(GstElement* e, const gchar* p_name, const GValue* p_value);
 extern void X_gst_g_object_set_structure(GstElement *e, const gchar* p_name, const GstStructure *p_value);
 extern void X_gst_g_object_setv(GObject* object, guint n_properties, const gchar* names[], const GValue value[]);
+
+extern void X_gst_g_object_set_uint_pad(GstPad *pad, const gchar* p_name, guint p_value);
+extern void X_gst_g_object_set_int_pad(GstPad *pad, const gchar* p_name, gint p_value);
+extern void X_gst_g_object_set_string_pad(GstPad *pad, const gchar* p_name, gchar* p_value);
+
 extern void X_g_signal_connect(GstElement* element, gchar* detailed_signal, guint64 callbackId);
 extern void cb_new_pad(GstElement* element, GstPad* pad, gpointer data);
 extern gboolean cb_pad_event(GstPad *pad, GstObject *parent, GstEvent *event);

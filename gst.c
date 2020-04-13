@@ -41,12 +41,24 @@ void X_gst_g_object_set_string(GstElement *e, const gchar* p_name, gchar* p_valu
   g_object_set(G_OBJECT(e), p_name, p_value, NULL);
 }
 
+void X_gst_g_object_set_string_pad(GstPad *pad, const gchar* p_name, gchar* p_value) {
+  g_object_set(G_OBJECT(pad), p_name, p_value, NULL);
+}
+
 void X_gst_g_object_set_int(GstElement *e, const gchar* p_name, gint p_value) {
   g_object_set(G_OBJECT(e), p_name, p_value, NULL);
 }
 
+void X_gst_g_object_set_int_pad(GstPad *pad, const gchar* p_name, gint p_value) {
+  g_object_set(G_OBJECT(pad), p_name, p_value, NULL);
+}
+
 void X_gst_g_object_set_uint(GstElement *e, const gchar* p_name, guint p_value) {
   g_object_set(G_OBJECT(e), p_name, p_value, NULL);
+}
+
+void X_gst_g_object_set_uint_pad(GstPad *pad, const gchar* p_name, guint p_value) {
+  g_object_set(G_OBJECT(pad), p_name, p_value, NULL);
 }
 
 void X_gst_g_object_set_bool(GstElement *e, const gchar* p_name, gboolean p_value) {
