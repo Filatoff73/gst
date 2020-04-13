@@ -105,6 +105,10 @@ func (e *Element) GetStaticPad(name string) (pad *Pad) {
 	return
 }
 
+func (e *Element) SetState(state StateOptions) {
+	C.gst_element_set_state(e.GstElement, C.GstState(state))
+}
+
 func (e *Element) AddPad(pad *Pad) bool {
 
 	Cret := C.gst_element_add_pad(e.GstElement, pad.pad)
