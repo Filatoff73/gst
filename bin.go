@@ -75,6 +75,17 @@ func (b *Bin) Remove(child *Element) {
 	return
 }
 
+func (b *Bin) RemoveMany(childs ...*Element) {
+
+	for _, child := range childs {
+		if child != nil {
+			C.X_gst_bin_remove(b.GstElement, child.GstElement)
+		}
+	}
+
+	return
+}
+
 func (b *Bin) AddMany(elements ...*Element) {
 	for _, e := range elements {
 		if e != nil {
