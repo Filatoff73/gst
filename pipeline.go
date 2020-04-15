@@ -67,8 +67,15 @@ func PipelineNew(name string) (e *Pipeline, err error) {
 	return
 }
 
-func (p *Pipeline) SetState(state StateOptions) {
-	C.gst_element_set_state(p.GstElement, C.GstState(state))
+func (p *Pipeline) SetState(state State) StateChangeReturn {
+	return StateChangeReturn(C.gst_element_set_state(p.GstElement, C.GstState(state)))
+}
+
+func (p *Pipeline) GetState(timeout_ns int64) (state, pending State, ret StateChangeReturn) {
+	ret = StateChangeReturn(C.gst_element_get_state(
+		p.GstElement, state.g(), pending.g(), C.GstClockTime(timeout_ns),
+	))
+	return
 }
 
 func (p *Pipeline) GetBus() (bus *Bus) {

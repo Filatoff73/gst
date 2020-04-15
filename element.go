@@ -23,14 +23,43 @@ var (
 
 type PadAddedCallback func(element *Element, pad *Pad)
 
-type StateOptions int
+type State C.GstState
 
 const (
-	StateVoidPending StateOptions = C.GST_STATE_VOID_PENDING
-	StateNull        StateOptions = C.GST_STATE_NULL
-	StateReady       StateOptions = C.GST_STATE_READY
-	StatePaused      StateOptions = C.GST_STATE_PAUSED
-	StatePlaying     StateOptions = C.GST_STATE_PLAYING
+	StateVoidPending = State(C.GST_STATE_VOID_PENDING)
+	StateNull         = State(C.GST_STATE_NULL)
+	StateReady        = State(C.GST_STATE_READY)
+	StatePaused       = State(C.GST_STATE_PAUSED)
+	StatePlaying      = State(C.GST_STATE_PLAYING)
+)
+
+func (s *State) g() *C.GstState {
+	return (*C.GstState)(s)
+}
+
+func (s State) String() string {
+	switch s {
+	case StateVoidPending:
+		return "STATE_VOID_PENDING"
+	case StateNull:
+		return "STATE_NULL"
+	case StateReady:
+		return "STATE_READY"
+	case StatePaused:
+		return "STATE_PAUSED"
+	case StatePlaying:
+		return "STATE_PLAYING"
+	}
+	return "Unknown state"
+}
+
+type StateChangeReturn C.GstStateChangeReturn
+
+const (
+	STATE_CHANGE_FAILURE    = StateChangeReturn(C.GST_STATE_CHANGE_FAILURE)
+	STATE_CHANGE_SUCCESS    = StateChangeReturn(C.GST_STATE_CHANGE_SUCCESS)
+	STATE_CHANGE_ASYNC      = StateChangeReturn(C.GST_STATE_CHANGE_ASYNC)
+	STATE_CHANGE_NO_PREROLL = StateChangeReturn(C.GST_STATE_CHANGE_NO_PREROLL)
 )
 
 type Element struct {
@@ -55,6 +84,10 @@ func (e *Element) Link(dst *Element) bool {
 		return true
 	}
 	return false
+}
+
+func (e *Element) UnLink(dst *Element)  {
+	C.gst_element_unlink(e.GstElement, dst.GstElement)
 }
 
 func (e *Element) GetPadTemplate(name string) (padTemplate *PadTemplate) {
@@ -125,8 +158,17 @@ func (e *Element) RemovePad(pad *Pad) bool {
 	return false
 }
 
-func (e *Element) SetState(state StateOptions) {
-	C.gst_element_set_state(e.GstElement, C.GstState(state))
+
+func (e *Element) SetState(state State) StateChangeReturn {
+	return StateChangeReturn(C.gst_element_set_state(e.GstElement, C.GstState(state)))
+}
+
+func (e *Element) GetState(timeout_ns int64) (state, pending State,
+	ret StateChangeReturn) {
+	ret = StateChangeReturn(C.gst_element_get_state(
+		e.GstElement, state.g(), pending.g(), C.GstClockTime(timeout_ns),
+	))
+	return
 }
 
 func (e *Element) GetClockBaseTime() uint64 {
