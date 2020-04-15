@@ -86,6 +86,14 @@ func (e *Element) Link(dst *Element) bool {
 	return false
 }
 
+func (e *Element) LinkFileterd(dst *Element,gstCaps *Caps) bool {
+	result := C.gst_element_link_filtered(e.GstElement, dst.GstElement,gstCaps.caps)
+	if result == C.TRUE {
+		return true
+	}
+	return false
+}
+
 func (e *Element) UnLink(dst *Element)  {
 	C.gst_element_unlink(e.GstElement, dst.GstElement)
 }
