@@ -17,6 +17,26 @@ type Bus struct {
 func (b *Bus) Pop() (message *Message) {
 
 	CGstMessage := C.gst_bus_pop(b.C)
+	if CGstMessage == nil {
+		return nil
+	}
+	message = &Message{
+		C: CGstMessage,
+	}
+
+	runtime.SetFinalizer(message, func(message *Message) {
+		C.gst_message_unref(message.C)
+	})
+
+	return
+}
+
+func (b *Bus) PopFiltered(messageType MessageType) (message *Message) {
+
+	CGstMessage := C.gst_bus_pop_filtered(b.C, C.GstMessageType(messageType))
+	if CGstMessage == nil {
+		return nil
+	}
 	message = &Message{
 		C: CGstMessage,
 	}
