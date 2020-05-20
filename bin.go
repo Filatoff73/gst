@@ -39,9 +39,9 @@ func ParseBinFromDescription(binStr string, ghostPads bool) (bin *Bin, err error
 	bin = &Bin{}
 	bin.GstElement = gstElt
 
-	runtime.SetFinalizer(bin, func(bin *Bin) {
-		C.gst_object_unref(C.gpointer(unsafe.Pointer(bin.GstElement)))
-	})
+	//runtime.SetFinalizer(bin, func(bin *Bin) {
+	//	C.gst_object_unref(C.gpointer(unsafe.Pointer(bin.GstElement)))
+	//})
 
 	return
 }
@@ -69,7 +69,18 @@ func (b *Bin) Add(child *Element) {
 	return
 }
 
+func (b *Bin) AddBin(child *Bin) {
+	C.X_gst_bin_add(b.GstElement, child.GstElement)
+	return
+}
+
 func (b *Bin) Remove(child *Element) {
+
+	C.X_gst_bin_remove(b.GstElement, child.GstElement)
+	return
+}
+
+func (b *Bin) RemoveBin(child *Bin) {
 
 	C.X_gst_bin_remove(b.GstElement, child.GstElement)
 	return

@@ -86,6 +86,7 @@ func (e *Element) Link(dst *Element) bool {
 	return false
 }
 
+
 func (e *Element) LinkFileterd(dst *Element,gstCaps *Caps) bool {
 	result := C.gst_element_link_filtered(e.GstElement, dst.GstElement,gstCaps.caps)
 	if result == C.TRUE {
@@ -139,6 +140,18 @@ func (e *Element) GetStaticPad(name string) (pad *Pad) {
 	n := (*C.gchar)(unsafe.Pointer(C.CString(name)))
 	defer C.g_free(C.gpointer(unsafe.Pointer(n)))
 	CPad := C.gst_element_get_static_pad(e.GstElement, n)
+	pad = &Pad{
+		pad: CPad,
+	}
+
+	return
+}
+
+func (e *Element) GetRequestPad2(name string) (pad *Pad) {
+
+	n := (*C.gchar)(unsafe.Pointer(C.CString(name)))
+	defer C.g_free(C.gpointer(unsafe.Pointer(n)))
+	CPad := C.gst_element_get_request_pad(e.GstElement, n)
 	pad = &Pad{
 		pad: CPad,
 	}

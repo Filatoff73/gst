@@ -30,6 +30,20 @@ func NewStructure(name string) (structure *Structure) {
 	return
 }
 
+func StructureFromString(structure string) (gstStruct *Structure) {
+	c := (*C.gchar)(unsafe.Pointer(C.CString(structure)))
+	defer C.g_free(C.gpointer(unsafe.Pointer(c)))
+	CStruct := C.gst_structure_from_string(c,nil)
+	gstStruct = &Structure{
+		C: CStruct,
+	}
+	runtime.SetFinalizer(gstStruct, func(gstStruct *Structure) {
+		C.gst_structure_free(gstStruct.C)
+	})
+
+	return
+}
+
 func (s *Structure) SetValue(name string, value interface{}) {
 
 	CName := (*C.gchar)(unsafe.Pointer(C.CString(name)))
