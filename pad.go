@@ -106,7 +106,10 @@ func (p *Pad) SetObject(name string, value interface{}) {
 		C.X_gst_g_object_set_int_pad(p.pad, cname, C.gint(value.(int)))
 	case uint32:
 		C.X_gst_g_object_set_uint_pad(p.pad, cname, C.guint(value.(uint32)))
-
+	case float32:
+		C.X_gst_g_object_set_float_pad(p.pad, cname, C.gfloat(value.(float32)))
+	case float64:
+		C.X_gst_g_object_set_float_pad(p.pad, cname, C.gfloat(value.(float64)))
 	}
 }
 

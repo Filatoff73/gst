@@ -78,6 +78,15 @@ func (p *Pipeline) GetState(timeout_ns int64) (state, pending State, ret StateCh
 	return
 }
 
+func (p *Pipeline) SeekSimple(millisec int64) bool  {
+	res:=  C.gst_element_seek_simple(p.GstElement, C.GST_FORMAT_TIME,
+		C.GST_SEEK_FLAG_FLUSH, C.gint64(millisec*1000000))
+	if res>0 {
+		return true
+	}
+	return false
+}
+
 func (p *Pipeline) GetBus() (bus *Bus) {
 
 	CBus := C.X_gst_pipeline_get_bus(p.GstElement)

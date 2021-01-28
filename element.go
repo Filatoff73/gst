@@ -135,6 +135,38 @@ func (e *Element) GetRequestPad(padTemplate *PadTemplate, name string, caps *Cap
 	return
 }
 
+//todo fail build on buildserver vendor/github.com/Filatoff73/gst/element.go:158:52: constant 18446744073709551615 overflows _Ctype_long
+//func (e *Element) SeekSimple(millisec int64) bool  {
+//	res:= C.gst_element_seek_simple(e.GstElement, C.GST_FORMAT_TIME,
+//		C.GST_SEEK_FLAG_FLUSH, C.gint64(millisec*1000000))
+//	if res>0 {
+//		return true
+//	}
+//	return false
+//}
+//
+//func (e *Element) Seek(millisec int64) bool  {
+//	//res:= C.gst_element_seek(e.GstElement,
+//	//	1.0,
+//	//	C.GST_FORMAT_TIME,
+//	//	C.GST_SEEK_FLAG_FLUSH,
+//	//	C.GST_SEEK_TYPE_SET, C.gint64(millisec*1000000), C.GST_SEEK_TYPE_NONE, C.GST_CLOCK_TIME_NONE)
+//
+//	res:= C.gst_element_seek(e.GstElement,
+//		1.0,
+//		C.GST_FORMAT_TIME,
+//		 C.GST_SEEK_FLAG_FLUSH,
+//		C.GST_SEEK_TYPE_SET, C.gint64(millisec*1000000), C.GST_SEEK_TYPE_NONE, C.GST_CLOCK_TIME_NONE)
+//	if res>0 {
+//		return true
+//	}
+//
+//	return false
+//}
+
+
+
+
 func (e *Element) GetStaticPad(name string) (pad *Pad) {
 
 	n := (*C.gchar)(unsafe.Pointer(C.CString(name)))
@@ -408,3 +440,22 @@ func nonCopyGoBytes(ptr uintptr, length int) []byte {
 func nonCopyCString(data *C.char, size C.int) []byte {
 	return nonCopyGoBytes(uintptr(unsafe.Pointer(data)), int(size))
 }
+
+func (e *Element) SetRtpBinNewStorageSignal(latency int) {
+
+	C.X_g_signal_connect_rtpbin_newstorage(e.GstElement, C.guint64(latency))
+}
+
+func (e *Element) SetRtpBinFecDecSignal(pt int) {
+	C.X_g_signal_connect_rtpbin_requestfecdec(e.GstElement, C.gint(pt))
+}
+
+func (e *Element) SetRtpBinRequestptmapSignal() {
+	C.X_g_signal_connect_rtpbin_requestptmap(e.GstElement)
+}
+
+func (e *Element) SetRtpBinNewRtpJitterSignal(params string)  {
+	n := (*C.gchar)(unsafe.Pointer(C.CString(params)))
+	C.X_g_signal_connect_rtpbin_newjitterbuffer(e.GstElement,n)
+}
+

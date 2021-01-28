@@ -19,7 +19,7 @@ void X_gst_shim_init() {
   else
     nano_str = "";
 
-  printf ("[ GST ] program is linked against GStreamer %d.%d.%d %s\n",
+  fprintf (stderr, "[ GST ] program is linked against GStreamer %d.%d.%d %s\n",
           major, minor, micro, nano_str);
 
   return;
@@ -50,6 +50,10 @@ void X_gst_g_object_set_int(GstElement *e, const gchar* p_name, gint p_value) {
 }
 
 void X_gst_g_object_set_int_pad(GstPad *pad, const gchar* p_name, gint p_value) {
+  g_object_set(G_OBJECT(pad), p_name, p_value, NULL);
+}
+
+void X_gst_g_object_set_float_pad(GstPad *pad, const gchar* p_name, gfloat p_value) {
   g_object_set(G_OBJECT(pad), p_name, p_value, NULL);
 }
 
@@ -85,7 +89,7 @@ void cb_new_pad(GstElement *element, GstPad *pad, gpointer data) {
 
 
 void X_g_signal_connect(GstElement* element, gchar* detailed_signal, guint64 callbackId) {
-  printf("[ GST ] g_signal_connect called with signal %s\n", detailed_signal);
+  fprintf(stderr,"[ GST ] g_signal_connect called with signal %s\n", detailed_signal);
   
   ElementUserData *d = calloc(1, sizeof(ElementUserData));
   d->callbackId = callbackId;
@@ -94,7 +98,7 @@ void X_g_signal_connect(GstElement* element, gchar* detailed_signal, guint64 cal
 }
 
 void X_g_signal_connect_data(gpointer instance, const gchar *detailed_signal, void (*f)(GstElement*, GstBus*, GstMessage*, gpointer), gpointer data, GClosureNotify destroy_data, GConnectFlags connect_flags) {
-  printf("[ GST ] g_signal_connect_data called\n");
+  fprintf(stderr,"[ GST ] g_signal_connect_data called\n");
   g_signal_connect_data(instance, detailed_signal, G_CALLBACK(f), data, destroy_data, connect_flags);
 }
 
@@ -229,3 +233,108 @@ gchar* X_gst_pad_get_name(GstPad* pad) {
 void cb_bus_message(GstBus * bus, GstMessage * message, gpointer poll_data) {
   //go_callback_bus_message_thunk(bus, message, poll_data);
 }
+
+static void
+on_rtpbin_new_storage (GstElement * rtpbin, GstElement * storage,
+    guint session_id, gpointer  instance)
+{
+  guint64 latency = (guint64)instance;
+  fprintf(stderr,"[ GST ] new-storage callback called for rtpbin latency=%d\n",latency);
+  if (latency > 0) {
+    g_object_set (storage, "size-time", (guint64) latency * GST_MSECOND, NULL);
+  }
+}
+
+void X_g_signal_connect_rtpbin_newstorage(GstElement* rtpbin, guint64 latency) {
+    fprintf(stderr,"[ GST ] g_signal_connect called with signal new-storage\n");
+    g_signal_connect (rtpbin, "new-storage", G_CALLBACK (on_rtpbin_new_storage), latency);
+}
+
+static GstElement *
+on_rtpbin_request_fec_decoder (GstElement * rtpbin, guint session_id,
+    gpointer  instance)
+{
+  GstElement *ret = NULL;
+  gint pt = (gint)instance;
+  GObject *internal_storage;
+  fprintf(stderr,"[ GST ] rtpulpfecdec callback called for rtpbin pt=%d\n",pt);
+
+    ret = gst_element_factory_make ("rtpulpfecdec", NULL);
+    g_signal_emit_by_name (rtpbin, "get-internal-storage", session_id,
+        &internal_storage);
+
+    g_object_set (ret, "pt", pt, "storage", internal_storage, NULL);
+    g_object_unref (internal_storage);
+    fprintf(stderr,"[ GST ] rtpulpfecdec callback setted\n");
+
+
+  return ret;
+}
+
+
+void X_g_signal_connect_rtpbin_requestfecdec(GstElement* rtpbin, gint pt) {
+    fprintf(stderr,"[ GST ] g_signal_connect called with signal request-fec-decoder\n");
+      g_signal_connect (rtpbin, "request-fec-decoder",
+          G_CALLBACK (on_rtpbin_request_fec_decoder), pt);
+}
+
+/* only used for the receiving streams */
+static GstCaps *
+on_rtpbin_request_pt_map (GstElement * rtpbin, guint session_id, guint pt,
+    gpointer  instance)
+{
+  GstCaps *ret;
+
+  fprintf(stderr,"getting pt map for pt %d in session %d\n", pt,
+      session_id);
+
+  return ret;
+
+}
+
+void X_g_signal_connect_rtpbin_requestptmap(GstElement* rtpbin) {
+    fprintf(stderr,"[ GST ] g_signal_connect called with signal request-pt-map\n");
+  g_signal_connect (rtpbin, "request-pt-map",
+      G_CALLBACK (on_rtpbin_request_pt_map), NULL);
+}
+
+
+static void
+on_rtpbin_new_jitterbuffer (GstElement * rtpbin, GstElement * jitterbuffer,
+    guint session_id, guint ssrc, gchar *value)
+{
+    fprintf(stderr,"[ GST ] on_rtpbin_new_jitterbuffer called, value=%s\n",value);
+    if (value==NULL) {
+        return;
+    }
+    gchar ** res;
+    res = g_strsplit(value,",",0);
+    if (res==NULL) {
+        return;
+    }
+    if (g_strv_length(res)==3) {
+        gint val1,val2,val3;
+        val1 = atoi(res[0]);
+        val2 = atoi(res[1]);
+        val3 = atoi(res[2]);
+        fprintf(stderr,"[ GST ] on_rtpbin_new_jitterbuffer: rtx-delay=%d, rtx-max-retries=%d, rtx-min-delay=%d\n",val1,val2,val3);
+        /* We don't set do-retransmission on rtpbin as we want per-session control */
+        g_object_set (jitterbuffer, "rtx-delay",
+            val1, NULL);
+        g_object_set (jitterbuffer, "rtx-max-retries",
+            val2, NULL);
+        g_object_set (jitterbuffer, "rtx-min-delay",
+            val3, NULL);
+
+        //не надо освобождать, иначе потом тут будет мусор
+        //g_free(value);
+        g_strfreev(res);
+    }
+
+}
+
+void X_g_signal_connect_rtpbin_newjitterbuffer(GstElement* rtpbin, gchar *value) {
+    fprintf(stderr,"[ GST ] g_signal_connect called with signal new-jitterbuffer\n");
+    g_signal_connect (rtpbin, "new-jitterbuffer", G_CALLBACK (on_rtpbin_new_jitterbuffer), value);
+}
+

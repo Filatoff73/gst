@@ -7,6 +7,7 @@ package gst
 import "C"
 
 import (
+	"errors"
 	"runtime"
 	"unsafe"
 )
@@ -74,6 +75,44 @@ func (s *Structure) ToString() (str string) {
 	Cstr := C.gst_structure_to_string(s.C)
 	str = C.GoString((*C.char)(unsafe.Pointer(Cstr)))
 	C.g_free((C.gpointer)(unsafe.Pointer(Cstr)))
+
+	return
+}
+
+func (s *Structure) GetStructureName() (str string) {
+	Cstr := C.gst_structure_get_name(s.C)
+	str = C.GoString((*C.char)(unsafe.Pointer(Cstr)))
+	return
+}
+
+func (s *Structure) GetDoubleArrayValue(key string) (res []float64,err error) {
+
+	res = make([]float64,0)
+	CKey := (*C.gchar)(unsafe.Pointer(C.CString(key)))
+	defer C.g_free(C.gpointer(unsafe.Pointer(CKey)))
+
+	Carray := C.gst_structure_get_value(s.C, CKey)
+	if Carray==nil {
+		err = errors.New("nil Carray")
+		return
+	}
+	CKeyArray := (*C.GValueArray)(C.g_value_get_boxed(Carray))
+	if CKeyArray==nil {
+		err = errors.New("nil CKeyArray")
+		return
+	}
+
+	size := CKeyArray.n_values
+	if size==0 {
+		err = errors.New("empty CKeyArray")
+		return
+	}
+	var i C.uint
+	for i=0;i<size;i++ {
+		value := C.g_value_array_get_nth(CKeyArray,i);
+		rms_dB := C.g_value_get_double (value);
+		res = append(res,float64(rms_dB))
+	}
 
 	return
 }

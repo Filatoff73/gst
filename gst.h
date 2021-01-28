@@ -31,6 +31,7 @@ extern void X_gst_g_object_setv(GObject* object, guint n_properties, const gchar
 
 extern void X_gst_g_object_set_uint_pad(GstPad *pad, const gchar* p_name, guint p_value);
 extern void X_gst_g_object_set_int_pad(GstPad *pad, const gchar* p_name, gint p_value);
+extern void X_gst_g_object_set_float_pad(GstPad *pad, const gchar* p_name, gfloat p_value);
 extern void X_gst_g_object_set_string_pad(GstPad *pad, const gchar* p_name, gchar* p_value);
 
 extern void X_g_signal_connect(GstElement* element, gchar* detailed_signal, guint64 callbackId);
@@ -61,3 +62,8 @@ extern GstClockTime X_gst_buffer_get_duration(GstBuffer* buffer);
 extern gchar* X_gst_pad_get_name(GstPad* pad);
 extern void cb_bus_message(GstBus * bus, GstMessage * message, gpointer poll_data);
 extern void X_g_signal_connect_data(gpointer instance, const gchar *detailed_signal, void (*f)(GstElement*, GstBus*, GstMessage*, gpointer), gpointer data, GClosureNotify destroy_data, GConnectFlags connect_flags);
+
+extern void X_g_signal_connect_rtpbin_newstorage(GstElement* rtpbin, guint64 latency);
+extern void X_g_signal_connect_rtpbin_requestfecdec(GstElement* rtpbin, gint pt);
+extern void X_g_signal_connect_rtpbin_requestptmap(GstElement* rtpbin);
+extern void X_g_signal_connect_rtpbin_newjitterbuffer(GstElement* rtpbin, gchar *value);
